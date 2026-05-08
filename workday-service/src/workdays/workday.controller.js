@@ -17,3 +17,20 @@ export const createWorkday = async (request, reply) => {
         });
     }
 };
+
+export const getWorkdays = async (request, reply) => {
+    try {
+        const workdays = await Workday.find();
+
+        return reply.status(200).send({
+        success: true,
+        data: workdays,
+        });
+    } catch (error) {
+        return reply.status(500).send({
+        success: false,
+        message: 'Error al obtener las jornadas',
+        error: error.message,
+        });
+    }
+};
