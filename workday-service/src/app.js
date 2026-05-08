@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
+import workdayRoutes from './workdays/workday.routes.js';
 
 
 const app = Fastify({
@@ -39,7 +40,9 @@ await app.register(rateLimit, {
 });
 
 //registrar rutas y swagger aqui
-
+await app.register(workdayRoutes, {
+    prefix: '/api/v1'
+});
 
 //healtycheck
 app.get('/api/v1/health', async () => ({
