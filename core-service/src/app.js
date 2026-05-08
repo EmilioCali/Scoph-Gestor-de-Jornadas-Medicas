@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
-
+import medicineRoutes from './medicines/medicine.routes.js';
 
 const app = Fastify({
     logger:{
@@ -40,6 +40,9 @@ await app.register(rateLimit, {
 
 //registrar rutas y swagger aqui
 
+await app.register(medicineRoutes, {
+    prefix: '/api/v1' 
+});
 
 //healtycheck
 app.get('/api/v1/health', async () => ({
