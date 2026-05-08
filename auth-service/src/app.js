@@ -1,66 +1,111 @@
-import Fastify from 'fastify';
-import cors from '@fastify/cors';
-import helmet from '@fastify/helmet';
-import rateLimit from '@fastify/rate-limit';
-//import swagger from '@fastify/swagger';
+import Fastify from 'fastify'
+import cors from '@fastify/cors'
+import jwt from '@fastify/jwt'
+import swagger from '@fastify/swagger'
+import swaggerUi from '@fastify/swagger-ui'
+import { connectDB } from './config/database.js'
+import authPlugin from './modules/auth/auth.routes.js'
 
-
-const app = Fastify({
-    logger:{
-        level: 'info',
-        transport: {
-            target: 'pino-pretty',
-            options:{
-                translateTime: 'HH:MM:ss Z',
-                ignore: 'pid,hostname'
-            }
-        }
+export async function buildApp() {
+  const app = Fastify({
+    ajv: {
+      customOptions: {
+        strict: false,
+        keywords: ['example']
+      }
+    },
+    logger: {
+      level: process.env.LOG_LEVEL || 'info',
+      transport:
+        process.env.NODE_ENV !== 'production'
+          ? { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss', ignore: 'pid,hostname' } }
+          : undefined
     }
-});
+  })
 
-//seguridad
-await app.register(cors, {
+  // --- Swagger / OpenAPI ---
+  await app.register(swagger, {
+    openapi: {
+      openapi: '3.0.0',
+      info: {
+        title: 'SCOPH API',
+        description: 'Sistema de Control de Operaciones y Programas de Salud — Documentación del API',
+        version: '1.0.0',
+        contact: {
+          name: 'Equipo SCOPH'
+        }
+      },
+      tags: [
+        { name: 'Sistema', description: 'Estado y salud del servicio' },
+        { name: 'Autenticación', description: 'Login y sesiones' },
+        { name: 'Usuarios', description: 'Gestión de usuarios (solo ADMIN)' }
+      ],
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+            description: 'Token JWT obtenido al hacer login'
+          }
+        }
+      }
+    }
+  })
+
+  await app.register(swaggerUi, {
+    routePrefix: '/api/docs',
+    uiConfig: {
+      docExpansion: 'list',
+      deepLinking: true,
+      tryItOutEnabled: true
+    },
+    staticCSP: true,
+    transformSpecificationClone: true
+  })
+
+  // --- Plugins ---
+  await app.register(cors, {
     origin: true,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-});
+    credentials: true
+  })
 
-await app.register(helmet);
+  await app.register(jwt, {
+    secret: process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET es requerido') })()
+  })
 
-await app.register(rateLimit, {
-    max: 10,
-    timeWindow: '10 minutes',
-    errorResponseBuilder: (req, context) =>({
-        success: false,
-        message: `Demasiadas peticiones desde esta IP, por favor intente nuevamenente despues de ${Math.ceil(context.ttl / 1000)} segundos`,
-        error: 'RATE_LIMIT_EXCEEDED',
-        retryAfter: context.after
+  // --- Base de datos ---
+  await connectDB()
+
+  // --- Rutas ---
+  await app.register(authPlugin, { prefix: '/api/auth' })
+
+  // Health check
+  app.get(
+    '/api/healthz',
+    {
+      schema: {
+        tags: ['Sistema'],
+        summary: 'Estado del servicio',
+        description: 'Verifica que el servicio esté corriendo correctamente',
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              status: { type: 'string', example: 'ok' },
+              service: { type: 'string', example: 'scoph-auth' },
+              timestamp: { type: 'string', format: 'date-time' }
+            }
+          }
+        }
+      }
+    },
+    async () => ({
+      status: 'ok',
+      service: 'scoph-auth',
+      timestamp: new Date().toISOString()
     })
-});
+  )
 
-//registrar rutas y swagger aqui
-
-
-//healtycheck
-app.get('/api/v1/health', async () => ({
-    status: 'ok',
-    message: 'Servicio funcionando correctamente',
-    timestamp: new Date().toISOString()
-}));
-
-//manejo de errores
-app.setErrorHandler((error, request, reply) =>{
-    request.log.error({
-        message: error.message,
-        stack: error.stack
-    });
-
-    reply.status(error.statusCode || 500).send({
-        status: 'error',
-        message: error.message || 'Internal Server Error'
-    });
-});
-
-export default app;
-
+  return app
+}
