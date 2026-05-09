@@ -1,13 +1,27 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose'
 
-const connectDb = async () => {
-    try {
-        await mongoose.connect(process.env.MONGO_URI);
-        console.log(`Conexión a la base de datos establecida`);
-    } catch (err) {
-        console.error(`Error al conectar a la base de datos: ${err.message}`);
-        process.exit(1);
-    }
+const MONGODB_URI = process.env.MONGODB_URI
+
+export async function connectDB() {
+  if (!MONGODB_URI) {
+    throw new Error('La variable de entorno MONGODB_URI es requerida')
+  }
+
+  try {
+    await mongoose.connect(MONGODB_URI)
+    console.log('✔ MongoDB conectado correctamente')
+  } catch (err) {
+    console.error('✘ Error al conectar con MongoDB:', err.message)
+    throw err
+  }
 }
 
-export default connectDb;
+mongoose.connection.on('disconnected', () => {
+  console.warn('MongoDB desconectado')
+})
+
+mongoose.connection.on('error', (err) => {
+  console.error('Error en la conexión de MongoDB:', err.message)
+})
+
+export default mongoose
