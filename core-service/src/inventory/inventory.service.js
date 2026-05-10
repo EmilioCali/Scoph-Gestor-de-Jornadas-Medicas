@@ -2,7 +2,7 @@ import centralInventory from "./centralInventory.model.js";
 import Movement from '../movements/movement.model.js'
 import Medicine from '../medicines/medicine.model.js'
 
-export async function registrarEntrada({ tipoEntrada, detalle, userId, destination }) {
+export async function registrarEntrada({ tipoEntrada, detalle, userId, destination, metadata }) {
     const movimientos = [];
 
     for (const item of detalle) {
@@ -53,4 +53,42 @@ export async function registrarEntrada({ tipoEntrada, detalle, userId, destinati
 
     }
     return movimientos
+}
+
+//salida por receta
+export async function registrarSalidaReceta({ detalle, userId, destination, metadata }){
+    const movimientos = [];
+
+    for(const item of detalle){
+        const { medicineId, batch, quantity } = item;
+
+        //validar que exista dicho medicamento
+        const med = await Medicine.findById(medicineId);
+        if(!med) throw new Error("Medicamento no encontrado, lo siento");
+
+        //crear movimiento TKT-019
+        const movimiento = new Movement({
+            type: "SALIDA",
+            subType: "RECETA",
+            origin: { type: "INVENTARIO_CENTRAL", id: null },
+            destination,
+            detail: [{
+                medicineId,
+                medicationSnapshot: { name: med.name, concentration: med.concentration },
+                batch,
+                quantity,
+                expirationDate: lote.expirationDate
+            }],
+            satus: "APLICADO",
+            userId,
+            metadata, //preescription y razon
+            appliedAt: new Date()
+        });
+
+        await movimiento.save();
+        movimientos.push(movimiento);
+        
+    }
+    return movimientos;
+
 }
