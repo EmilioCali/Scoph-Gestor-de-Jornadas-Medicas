@@ -5,26 +5,26 @@ import Medicine from '../medicines/medicine.model.js'
 export async function registrarEntrada({ tipoEntrada, detalle, userId, destination }) {
     const movimientos = [];
 
-    for(const item of detalle){
+    for (const item of detalle) {
         const { medicineId, batch, quantity, expirationDate } = item;
 
         //validaciones de integridad de lote - TKT-018
-        if(quantity <= 0) throw new Error("La cantidad debe de ser positiva");
-        if(new Date(expirationDate) <= new Date()) throw new Error("La fecha de vencimiento debe de ser una futura");
-        
+        if (quantity <= 0) throw new Error("La cantidad debe de ser positiva");
+        if (new Date(expirationDate) <= new Date()) throw new Error("La fecha de vencimiento debe de ser una futura");
+
         const med = await Medicine.findById(medicineId);
-        if(!med ) throw new Error("Medicamento no encontrado");
+        if (!med) throw new Error("Medicamento no encontrado");
 
         //crear movimienti - TKT-016
         const movimiento = new Movement({
             type: 'ENTRADA',
             subType: tipoEntrada,
-            origin: { type: 'EXTERNO' }, // proveedor/donación
+            origin: { type: 'EXTERNO' }, //ya que es de afuera donde se obtiene ya sea compra o donación
             destination,
-            detail:[{
+            detail: [{
                 medicineId,
                 medicationSnapshot: { name: med.name, concentration: med.concentration },
-                batch, 
+                batch,
                 quantity,
                 expirationDate
             }],
@@ -37,26 +37,20 @@ export async function registrarEntrada({ tipoEntrada, detalle, userId, destinati
 
         //actualizar inventario centraal TKT-017
         let inv = await centralInventory.findOne({ medicineId })
-            if(!inv){
-                inv = new centralInventory({ medicineId, lots: [], totalStock: 0 })
-            }
+        if (!inv) {
+            inv = new centralInventory({ medicineId, lots: [], totalStock: 0 })
+        }
 
-            const loteExistente = inv.lots.find(l => l.batch === batch )
-            if(loteExistente){
-                loteExistente.stock += quantity;
-            }else{
-                //validar duplicados exactos
-                const duplicado = inv.lots.find(l => l.batch === batch && l.expirationDate.getTime === new Date(expirationDate).getTime)
-                if(duplicado) throw new Error("El lote ya existe con esa fecha");
-                
-                inv.lots.push({ batch, expirationDate, stock: quantity })
-            }
+        const loteExistente = inv.lots.find(l => l.batch === batch)
+        if (loteExistente) {
+            loteExistente.stock += quantity
+        } else {
+            inv.lots.push({ batch, expirationDate, stock: quantity })
+        }
 
-            inv.totalStock += quantity;
-            await inv.save();
-        
+        inv.totalStock += quantity
+        await inv.save()
+
     }
-
     return movimientos
-    
 }
