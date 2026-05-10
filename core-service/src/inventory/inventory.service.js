@@ -102,7 +102,7 @@ export async function registrarSalidaReceta({ detalle, userId, destination, meta
                 quantity,
                 expirationDate: lote.expirationDate
             }],
-            satus: "APLICADO",
+            status: "APLICADO",
             userId,
             metadata, //preescription y razon
             appliedAt: new Date()
