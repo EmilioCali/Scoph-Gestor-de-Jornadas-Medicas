@@ -51,7 +51,7 @@ const medicationSnapshotSchema = new Schema(
             type: String,
             required: [true, 'El tipo es requerido'],
             enum: {
-                values: ['INVENTARIO_CENTRAL', 'INVENTARIO_JORNADA', 'EXTERNO'],
+                values: ['INVENTARIO_CENTRAL', 'INVENTARIO_JORNADA', 'EXTERNO', 'RECETA'],
                 message: 'Tipo no válido',
             },
         },

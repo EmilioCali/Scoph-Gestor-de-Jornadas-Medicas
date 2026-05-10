@@ -46,7 +46,7 @@ export const createSalidaReceta = async (request, reply) => {
         return reply.status(400).send({
             success: false,
             message: "Error al intentar registrar la salida por receta",
-            error: error.message
+            error: err.message
         });
         
     }

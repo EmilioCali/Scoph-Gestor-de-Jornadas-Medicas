@@ -66,6 +66,29 @@ export async function registrarSalidaReceta({ detalle, userId, destination, meta
         const med = await Medicine.findById(medicineId);
         if(!med) throw new Error("Medicamento no encontrado, lo siento");
 
+        //TKT-020 validación de stock disponible
+        const inv = await centralInventory.findOne({ medicineId });
+        if(!inv) throw new Error("No existe inventario para este medicamento");
+
+        const lote = inv.lots.find(l => l.batch === batch); //batch = lotes
+        if(!lote) throw new Error("El lote no se ha encontrado");
+
+        if(lote.stock < quantity){
+            throw new Error(`Stock insuficiente en el lote ${batch}. Disponible: ${lote.stock}, solicitado: ${quantity}`);
+            
+        }
+        
+        //descuento de stock
+        lote.stock -= quantity;
+        inv.totalStock -= quantity;
+
+        //eviatar valores negativos
+        if(lote.stock < 0) lote.stock = 0;
+        if(inv.totalStock < 0) inv.totalStock = 0;
+
+        await inv.save();
+        
+
         //crear movimiento TKT-019
         const movimiento = new Movement({
             type: "SALIDA",
@@ -79,7 +102,7 @@ export async function registrarSalidaReceta({ detalle, userId, destination, meta
                 quantity,
                 expirationDate: lote.expirationDate
             }],
-            satus: "APLICADO",
+            status: "APLICADO",
             userId,
             metadata, //preescription y razon
             appliedAt: new Date()
