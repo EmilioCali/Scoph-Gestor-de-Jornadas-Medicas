@@ -78,6 +78,15 @@ export async function registrarSalidaReceta({ detalle, userId, destination, meta
             
         }
         
+        //descuento de stock
+        lote.stock -= quantity;
+        inv.totalStock -= quantity;
+
+        //eviatar valores negativos
+        if(lote.stock < 0) lote.stock = 0;
+        if(inv.totalStock < 0) inv.totalStock = 0;
+
+        await inv.save();
         
 
         //crear movimiento TKT-019
