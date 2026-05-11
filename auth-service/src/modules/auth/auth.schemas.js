@@ -6,7 +6,7 @@
       apellido: { type: 'string', example: 'Gómez' },
       username: { type: 'string', example: 'dgomez' },
       correo: { type: 'string', example: 'daniel@gmail.com' },
-      rol: { type: 'string', enum: ['ADMIN', 'MEDICO', 'ENFERMERO', 'ASISTENTE'] },
+      rol: { type: 'string', enum: ['ADMIN', 'USER'] },
       telefono: { type: 'string', example: '12345678' },
       fotoPerfil: { type: 'string', nullable: true },
       isActive: { type: 'boolean' },
@@ -69,7 +69,7 @@
         username: { type: 'string', minLength: 3, example: 'dgomez' },
         correo: { type: 'string', example: 'daniel@gmail.com' },
         password: { type: 'string', minLength: 8, example: 'ContraseñaSegura123' },
-        rol: { type: 'string', enum: ['ADMIN', 'MEDICO', 'ENFERMERO', 'ASISTENTE'] },
+        rol: { type: 'string', enum: ['ADMIN', 'USER'] },
         telefono: { type: 'string', example: '12345678' }
       }
     },
