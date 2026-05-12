@@ -1,6 +1,7 @@
 import { registrarEntrada } from "../inventory/inventory.service.js";
 import { registrarSalidaReceta, registrarTransferencia } from "../inventory/inventory.service.js";
 import { handleServiceError } from '../utils/errorHandler.js';
+import { successResponse } from '../utils/response.js';
 
 export const createEntrada = async (request, reply) => {
     try {
@@ -11,10 +12,10 @@ export const createEntrada = async (request, reply) => {
             userId: request.user?.id || 'system'
         })
 
-        return reply.status(201).send({
-            success: true,
+        return successResponse(reply, {
             message: 'Movimiento de entrada registrado exitosamente',
-            data: movimientos
+            data: movimientos,
+            statusCode: 201
         })
     } catch (error) {
         return handleServiceError(error, reply);
@@ -34,10 +35,10 @@ export const createSalidaReceta = async (request, reply) => {
             userId: request.user?.id || "system"
         });
 
-        return reply.status(201).send({
-            success: true,
-            message: "Salida por receta registrada correctamente",
-            data: movimientos
+        return successResponse(reply, {
+            message: 'Salida por receta registrada correctamente',
+            data: movimientos,
+            statusCode: 201
         })
     } catch (error) {
         return handleServiceError(error, reply);
@@ -55,11 +56,11 @@ export const createTransferencia = async (request, reply) => {
         userId: request.user?.id || 'system'
         });
         
-        return reply.status(201).send({
-        success: true,
-        message: 'Transferencia a jornada registrada exitosamente',
-        data: movimiento
-        });
+        return successResponse(reply, {
+            message: 'Transferencia a jornada registrada exitosamente',
+            data: movimiento,
+            statusCode: 201
+        })
     } catch (error) {
         return handleServiceError(error, reply);
     }
