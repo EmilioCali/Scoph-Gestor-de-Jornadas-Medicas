@@ -1,6 +1,7 @@
 import centralInventory from "./centralInventory.model.js";
 import Movement from '../movements/movement.model.js'
 import Medicine from '../medicines/medicine.model.js'
+import WorkdayInventory from './workdayInventory.model.js';
 
 export async function registrarEntrada({ tipoEntrada, detalle, userId, destination, metadata }) {
     const movimientos = [];
@@ -114,4 +115,38 @@ export async function registrarSalidaReceta({ detalle, userId, destination, meta
     }
     return movimientos;
 
+}
+
+export async function registrarTransferencia({ jornadaId, jornadaNombre, detalle, userId }) {
+    const movimientos = [];
+
+    for (const item of detalle) {
+        const { medicineId, batch, quantity } = item;
+
+        const med = await Medicine.findById(medicineId);
+        if (!med) throw new Error('Medicamento no encontrado');
+
+        const movimiento = new Movement({
+        type: 'TRANSFERENCIA',
+        subType: 'ASIGNACION_JORNADA',
+        origin: { type: 'INVENTARIO_CENTRAL', id: null },
+        destination: { type: 'INVENTARIO_JORNADA', id: jornadaId },
+        detail: [{
+            medicineId,
+            medicationSnapshot: { name: med.name, concentration: med.concentration },
+            batch,
+            quantity,
+            expirationDate: item.expirationDate
+        }],
+        status: 'PENDIENTE',
+        userId,
+        metadata: { reason: `Asignación a jornada ${jornadaNombre}` },
+        appliedAt: null
+        });
+
+        await movimiento.save();
+        movimientos.push(movimiento);
+    }
+
+    return movimientos;
 }

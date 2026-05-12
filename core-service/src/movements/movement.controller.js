@@ -1,5 +1,5 @@
 import { registrarEntrada } from "../inventory/inventory.service.js";
-import { registrarSalidaReceta } from "../inventory/inventory.service.js";
+import { registrarSalidaReceta, registrarTransferencia } from "../inventory/inventory.service.js";
 
 export const createEntrada = async (request, reply) => {
     try {
@@ -51,3 +51,28 @@ export const createSalidaReceta = async (request, reply) => {
         
     }
 }
+
+export const createTransferencia = async (request, reply) => {
+    try {
+        const { jornadaId, jornadaNombre, detalle } = request.body;
+
+        const movimiento = await registrarTransferencia({
+        jornadaId,
+        jornadaNombre,
+        detalle,
+        userId: request.user?.id || 'system'
+        });
+        
+        return reply.status(201).send({
+        success: true,
+        message: 'Transferencia a jornada registrada exitosamente',
+        data: movimiento
+        });
+    } catch (error) {
+        return reply.status(400).send({
+        success: false,
+        message: 'Error al registrar la transferencia',
+        error: error.message
+        });
+    }
+};
