@@ -1,5 +1,6 @@
 import { registrarEntrada } from "../inventory/inventory.service.js";
 import { registrarSalidaReceta, registrarTransferencia } from "../inventory/inventory.service.js";
+import { handleServiceError } from '../utils/errorHandler.js';
 
 export const createEntrada = async (request, reply) => {
     try {
@@ -16,11 +17,7 @@ export const createEntrada = async (request, reply) => {
             data: movimientos
         })
     } catch (error) {
-        return reply.status(400).send({
-            success: false,
-            message: 'Error al registrar el movimiento',
-            error: error.message
-        })
+        return handleServiceError(error, reply);
     }
 };
 
@@ -42,13 +39,8 @@ export const createSalidaReceta = async (request, reply) => {
             message: "Salida por receta registrada correctamente",
             data: movimientos
         })
-    } catch (err) {
-        return reply.status(400).send({
-            success: false,
-            message: "Error al intentar registrar la salida por receta",
-            error: err.message
-        });
-        
+    } catch (error) {
+        return handleServiceError(error, reply);
     }
 }
 
@@ -69,10 +61,6 @@ export const createTransferencia = async (request, reply) => {
         data: movimiento
         });
     } catch (error) {
-        return reply.status(400).send({
-        success: false,
-        message: 'Error al registrar la transferencia',
-        error: error.message
-        });
+        return handleServiceError(error, reply);
     }
 };
