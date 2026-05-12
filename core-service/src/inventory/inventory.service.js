@@ -126,7 +126,46 @@ export async function registrarTransferencia({ jornadaId, jornadaNombre, detalle
         const med = await Medicine.findById(medicineId);
         if (!med) throw new Error('Medicamento no encontrado');
 
-        const movimiento = new Movement({
+        // Validar inventario central
+        const inv = await centralInventory.findOne({ medicineId });
+        if (!inv) throw new Error('No existe inventario para este medicamento');
+        
+        const lote = inv.lots.find(l => l.batch === batch);
+        if (!lote) throw new Error('El lote no se ha encontrado');
+
+        if (lote.stock < quantity) {
+        throw new Error(`Stock insuficiente en el lote ${batch}. Disponible: ${lote.stock}, solicitado: ${quantity}`);
+    }
+
+    // Descontar del inventario central
+    lote.stock -= quantity;
+    inv.totalStock -= quantity;
+    if (lote.stock < 0) lote.stock = 0;
+    if (inv.totalStock < 0) inv.totalStock = 0;
+    await inv.save();
+
+    // Sumar al inventario de jornada
+    let invJornada = await WorkdayInventory.findOne({ workdayId: jornadaId, medicineId });
+    if (!invJornada) {
+        invJornada = new WorkdayInventory({
+            workdayId: jornadaId,
+            workdayName: jornadaNombre,
+            medicineId,
+            lots: [],
+            totalStock: 0
+        });
+    }
+
+    const loteJornada = invJornada.lots.find(l => l.batch === batch);
+    if (loteJornada) {
+        loteJornada.stock += quantity;
+    } else {
+        invJornada.lots.push({ batch, expirationDate: lote.expirationDate, stock: quantity });
+    }
+    invJornada.totalStock += quantity;
+    await invJornada.save();
+
+    const movimiento = new Movement({
         type: 'TRANSFERENCIA',
         subType: 'ASIGNACION_JORNADA',
         origin: { type: 'INVENTARIO_CENTRAL', id: null },
@@ -136,12 +175,12 @@ export async function registrarTransferencia({ jornadaId, jornadaNombre, detalle
             medicationSnapshot: { name: med.name, concentration: med.concentration },
             batch,
             quantity,
-            expirationDate: item.expirationDate
+            expirationDate: lote.expirationDate
         }],
-        status: 'PENDIENTE',
+        status: 'APLICADO',
         userId,
         metadata: { reason: `Asignación a jornada ${jornadaNombre}` },
-        appliedAt: null
+        appliedAt: new Date()
         });
 
         await movimiento.save();
