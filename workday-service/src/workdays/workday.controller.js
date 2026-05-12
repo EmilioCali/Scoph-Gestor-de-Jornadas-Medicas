@@ -34,3 +34,27 @@ export const getWorkdays = async (request, reply) => {
         });
     }
 };
+
+export const getWorkdayById = async (request, reply) => {
+    try {
+        const workday = await Workday.findById(request.params.id);
+
+        if (!workday) {
+            return reply.status(404).send({
+                success: false,
+                message: 'Jornada no encontrada',
+            });
+        }
+
+        return reply.status(200).send({
+            success: true,
+            data: workday,
+        });
+    } catch (error) {
+        return reply.status(500).send({
+            success: false,
+            message: 'Error al obtener la jornada',
+            error: error.message,
+        });
+    }
+};
