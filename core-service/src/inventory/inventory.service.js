@@ -2,6 +2,7 @@ import centralInventory from "./centralInventory.model.js";
 import Movement from '../movements/movement.model.js'
 import Medicine from '../medicines/medicine.model.js'
 import WorkdayInventory from './workdayInventory.model.js';
+import { getWorkdayById } from '../workdays/workday.client.js';
 
 export async function registrarEntrada({ tipoEntrada, detalle, userId, destination, metadata }) {
     const movimientos = [];
@@ -119,6 +120,7 @@ export async function registrarSalidaReceta({ detalle, userId, destination, meta
 
 export async function registrarTransferencia({ jornadaId, jornadaNombre, detalle, userId }) {
     const movimientos = [];
+    await getWorkdayById(jornadaId);
 
     for (const item of detalle) {
         const { medicineId, batch, quantity } = item;
