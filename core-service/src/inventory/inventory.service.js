@@ -222,3 +222,17 @@ export async function descontarStockJornada(productoId, cantidad) {
     return lote
 }
 
+export async function procesarRetornoJornada(productoId, cantidad) {
+
+    const lote = await Inventory.findOne({
+        producto: productoId
+    })
+
+    validarLoteExistente(lote)
+
+    lote.stock += cantidad
+
+    await lote.save()
+
+    return lote
+}
