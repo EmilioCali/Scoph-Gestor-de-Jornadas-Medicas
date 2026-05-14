@@ -12,3 +12,8 @@ export function validarNoVencido(fechaVencimiento) {
     }
 }
 
+export function validarStockPositivo(stock){
+    if(stock <= 0){
+        throw new Error('El lote no tiene stock disponible');
+    }
+}
