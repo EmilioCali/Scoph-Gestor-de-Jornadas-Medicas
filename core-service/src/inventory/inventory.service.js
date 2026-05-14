@@ -193,46 +193,70 @@ export async function registrarTransferencia({ jornadaId, jornadaNombre, detalle
     return movimientos;
 }
 
+async function getWorkdayInventory(productoId) {
+    const inventory = await WorkdayInventory.findOne({ medicineId: productoId });
+    if (!inventory) {
+        throw new Error('Inventario de jornada no encontrado');
+    }
+    return inventory;
+}
+
 export async function validarStockJornada(productoId, cantidad) {
+    const inventory = await getWorkdayInventory(productoId);
 
-    const lote = await Inventory.findOne({
-        producto: productoId
-    })
+    const ahora = new Date();
+    const lote = inventory.lots.find(
+        (l) => l.stock > 0 && new Date(l.expirationDate) >= ahora
+    );
 
-    validarLoteExistente(lote)
+    validarLoteExistente(lote);
+    validarNoVencido(lote.expirationDate);
 
-    validarNoVencido(lote.fechaVencimiento)
+    if (lote.stock < cantidad) {
+        throw new Error(`Stock insuficiente. Disponible: ${lote.stock}, solicitado: ${cantidad}`);
+    }
 
-    validarStockPositivo(lote.stock, cantidad)
+    validarStockPositivo(lote.stock);
 
-    return lote
+    return { inventory, lote };
 }
 
 export async function descontarStockJornada(productoId, cantidad) {
+    const { inventory, lote } = await validarStockJornada(productoId, cantidad);
 
-    const lote = await validarStockJornada(
-        productoId,
-        cantidad
-    )
+    lote.stock -= cantidad;
+    inventory.totalStock -= cantidad;
+    if (inventory.totalStock < 0) {
+        inventory.totalStock = 0;
+    }
 
-    lote.stock -= cantidad
+    await inventory.save();
 
-    await lote.save()
+    const medicine = await Medicine.findById(inventory.medicineId);
+    if (!medicine) {
+        throw new Error('Medicamento no encontrado');
+    }
 
-    return lote
+    return { inventory, lote, medicine };
 }
 
 export async function procesarRetornoJornada(productoId, cantidad) {
+    const inventory = await getWorkdayInventory(productoId);
+    validarLoteExistente(inventory);
 
-    const lote = await Inventory.findOne({
-        producto: productoId
-    })
+    const lote = inventory.lots[0];
+    validarLoteExistente(lote);
+    validarNoVencido(lote.expirationDate);
 
-    validarLoteExistente(lote)
+    lote.stock += cantidad;
+    inventory.totalStock += cantidad;
 
-    lote.stock += cantidad
+    await inventory.save();
 
-    await lote.save()
+    const medicine = await Medicine.findById(inventory.medicineId);
+    if (!medicine) {
+        throw new Error('Medicamento no encontrado');
+    }
 
-    return lote
+    return { inventory, lote, medicine };
 }

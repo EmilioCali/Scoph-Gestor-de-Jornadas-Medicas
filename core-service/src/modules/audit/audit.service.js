@@ -19,12 +19,7 @@ export async function registerAudit({
         })
 
     } catch (error) {
-
-        console.error(
-            'Error registrando auditoría',
-            error
-        )
-
+        console.error('Error registrando auditoría', error);
+        throw error;
     }
-
 }
