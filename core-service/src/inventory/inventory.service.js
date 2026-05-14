@@ -3,6 +3,7 @@ import Movement from '../movements/movement.model.js'
 import Medicine from '../medicines/medicine.model.js'
 import WorkdayInventory from './workdayInventory.model.js';
 import { getWorkdayById } from '../workdays/workday.client.js';
+import { validarLoteExistente, validarNoVencido, validarStockPositivo } from "../utils/validator.js";
 
 export async function registrarEntrada({ tipoEntrada, detalle, userId, destination, metadata }) {
     const movimientos = [];
@@ -191,3 +192,19 @@ export async function registrarTransferencia({ jornadaId, jornadaNombre, detalle
 
     return movimientos;
 }
+
+export async function validarStockJornada(productoId, cantidad) {
+
+    const lote = await Inventory.findOne({
+        producto: productoId
+    })
+
+    validarLoteExistente(lote)
+
+    validarNoVencido(lote.fechaVencimiento)
+
+    validarStockPositivo(lote.stock, cantidad)
+
+    return lote
+}
+
