@@ -208,3 +208,17 @@ export async function validarStockJornada(productoId, cantidad) {
     return lote
 }
 
+export async function descontarStockJornada(productoId, cantidad) {
+
+    const lote = await validarStockJornada(
+        productoId,
+        cantidad
+    )
+
+    lote.stock -= cantidad
+
+    await lote.save()
+
+    return lote
+}
+
