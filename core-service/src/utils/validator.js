@@ -4,3 +4,11 @@ export function validarLoteExistente(lote){
     }
 }
 
+export function validarNoVencido(fechaVencimiento) {
+    const hoy = new Date();
+
+    if (new Date(fechaVencimiento) < hoy){
+        throw new Error('El lote está vencido');
+    }
+}
+
