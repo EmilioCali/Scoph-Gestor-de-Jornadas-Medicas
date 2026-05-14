@@ -1,9 +1,13 @@
-import { registrarEntrada } from "../inventory/inventory.service.js";
-import { registrarSalidaReceta, registrarTransferencia } from "../inventory/inventory.service.js";
+import Movement from './movement.model.js'
+import {
+    registrarEntrada,
+    registrarSalidaReceta,
+    registrarTransferencia,
+    descontarStockJornada,
+    procesarRetornoJornada
+} from '../inventory/inventory.service.js';
 import { handleServiceError } from '../utils/errorHandler.js';
 import { successResponse } from '../utils/response.js';
-import { descontarStockJornada } from "../inventory/inventory.service.js";
-import { procesarRetornoJornada } from "../inventory/inventory.service.js";
 
 export const createEntrada = async (request, reply) => {
     try {
@@ -68,70 +72,74 @@ export const createTransferencia = async (request, reply) => {
     }
 };
 
-export async function createConsumoJornada(req, res) {
-
+export const createConsumoJornada = async (request, reply) => {
     try {
+        const { productoId, cantidad } = request.body;
 
-        const {
-            productoId,
-            cantidad
-        } = req.body
-
-        await descontarStockJornada(
-            productoId,
-            cantidad
-        )
+        const { inventory, lote, medicine } = await descontarStockJornada(productoId, cantidad);
 
         const movimiento = await Movement.create({
-            tipo: 'CONSUMO',
-            producto: productoId,
-            cantidad,
-            estado: 'APLICADO'
-        })
+            type: 'SALIDA',
+            subType: 'CONSUMO_JORNADA',
+            origin: { type: 'INVENTARIO_JORNADA', id: inventory.workdayId },
+            destination: { type: 'EXTERNO', id: null },
+            detail: [{
+                medicineId: medicine._id,
+                medicationSnapshot: {
+                    name: medicine.name,
+                    concentration: medicine.concentration
+                },
+                batch: lote.batch,
+                quantity,
+                expirationDate: lote.expirationDate
+            }],
+            status: 'APLICADO',
+            userId: request.user?.id || 'system',
+            appliedAt: new Date()
+        });
 
-        return res.status(201).send({
+        return successResponse(reply, {
             message: 'Consumo registrado',
-            movimiento
-        })
-
+            data: movimiento,
+            statusCode: 201
+        });
     } catch (error) {
-
-        return res.status(400).send({
-            message: error.message
-        })
+        return handleServiceError(error, reply);
     }
-}
+};
 
-export async function createRetornoJornada(req, res) {
-
+export const createRetornoJornada = async (request, reply) => {
     try {
+        const { productoId, cantidad } = request.body;
 
-        const {
-            productoId,
-            cantidad
-        } = req.body
-
-        await procesarRetornoJornada(
-            productoId,
-            cantidad
-        )
+        const { inventory, lote, medicine } = await procesarRetornoJornada(productoId, cantidad);
 
         const movimiento = await Movement.create({
-            tipo: 'RETORNO',
-            producto: productoId,
-            cantidad,
-            estado: 'APLICADO'
-        })
+            type: 'ENTRADA',
+            subType: 'RETORNO_JORNADA',
+            origin: { type: 'EXTERNO', id: null },
+            destination: { type: 'INVENTARIO_JORNADA', id: inventory.workdayId },
+            detail: [{
+                medicineId: medicine._id,
+                medicationSnapshot: {
+                    name: medicine.name,
+                    concentration: medicine.concentration
+                },
+                batch: lote.batch,
+                quantity,
+                expirationDate: lote.expirationDate
+            }],
+            status: 'APLICADO',
+            userId: request.user?.id || 'system',
+            appliedAt: new Date()
+        });
 
-        return res.status(201).send({
+        return successResponse(reply, {
             message: 'Retorno registrado',
-            movimiento
-        })
-
+            data: movimiento,
+            statusCode: 201
+        });
     } catch (error) {
-
-        return res.status(400).send({
-            message: error.message
-        })
+        return handleServiceError(error, reply);
     }
-}
+};
