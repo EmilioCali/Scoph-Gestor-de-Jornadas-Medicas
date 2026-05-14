@@ -2,6 +2,7 @@ import { registrarEntrada } from "../inventory/inventory.service.js";
 import { registrarSalidaReceta, registrarTransferencia } from "../inventory/inventory.service.js";
 import { handleServiceError } from '../utils/errorHandler.js';
 import { successResponse } from '../utils/response.js';
+import { descontarStockJornada } from "../inventory/inventory.service.js";
 
 export const createEntrada = async (request, reply) => {
     try {
@@ -65,3 +66,37 @@ export const createTransferencia = async (request, reply) => {
         return handleServiceError(error, reply);
     }
 };
+
+export async function createConsumoJornada(req, res) {
+
+    try {
+
+        const {
+            productoId,
+            cantidad
+        } = req.body
+
+        await descontarStockJornada(
+            productoId,
+            cantidad
+        )
+
+        const movimiento = await Movement.create({
+            tipo: 'CONSUMO',
+            producto: productoId,
+            cantidad,
+            estado: 'APLICADO'
+        })
+
+        return res.status(201).send({
+            message: 'Consumo registrado',
+            movimiento
+        })
+
+    } catch (error) {
+
+        return res.status(400).send({
+            message: error.message
+        })
+    }
+}
