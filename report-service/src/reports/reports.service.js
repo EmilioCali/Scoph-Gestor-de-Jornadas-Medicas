@@ -1,4 +1,4 @@
-import { SERVICES } from './config/services.js';
+import { SERVICES } from '../config/services.js';
 
 export async function obtenerConsumoJornada(jornadaId){
     const controller = new AbortController();
@@ -6,7 +6,7 @@ export async function obtenerConsumoJornada(jornadaId){
 
     //consumir el servicio de core, en conreto los movimientos
     try {
-        const response = await fetch(`${SERVICES.core.baseUrl}/api/v1/movements?subtype=CONSUMO_JORNADA&jornadaId=${jornadaId}`,
+        const response = await fetch(`${SERVICES.core.baseUrl}/api/v1/movimientos?subType=CONSUMO_JORNADA&jornadaId=${jornadaId}`,
             {signal: controller.signal}
         );
 
@@ -18,8 +18,8 @@ export async function obtenerConsumoJornada(jornadaId){
         const consumo = {};
         data.data.forEach(mov =>{
             mov.detail.forEach(item =>{
-                if(!consumo[Key]){
-                    consumo[Key]= {
+                if(!consumo[key]){
+                    consumo[key]= {
                         medicineId: item.medicineId,
                         nombre: item.medicamentoSnapshot.name,
                         concentracion: item.medicamentoSnapshot.concentration,

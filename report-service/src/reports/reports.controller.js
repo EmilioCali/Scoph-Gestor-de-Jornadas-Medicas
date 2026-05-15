@@ -1,4 +1,4 @@
-import { obtenerConsumoJornada } from "./reports.service";
+import { obtenerConsumoJornada } from "./reports.service.js";
 
 export const getConsumoJornada = async(request, reply) => {
     try {
