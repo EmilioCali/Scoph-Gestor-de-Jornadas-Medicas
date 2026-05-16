@@ -46,8 +46,9 @@ export async function obtenerStockActual() {
     const response = await fetch(`${SERVICES.core.baseUrl}/api/v1/inventario-central`);
     if (!response.ok) throw new Error("Error al consultar inventario central");
     const data = await response.json();
+
     return data.data.map(inv => ({
-        medicineId: inv.medicineId,
+        medicineId: inv.medicineId._id, //devuleve solo el id del mediaento y no el objeto completo
         nombre: inv.medicineId?.name,
         concentracion: inv.medicineId?.concentration,
         stockTotal: inv.totalStock,
