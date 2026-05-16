@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import centralInventory from "./centralInventory.model.js";
 import Movement from '../movements/movement.model.js'
 import Medicine from '../medicines/medicine.model.js'
@@ -194,12 +195,13 @@ export async function registrarTransferencia({ jornadaId, jornadaNombre, detalle
 }
 
 async function getWorkdayInventory(productoId) {
-    const inventory = await WorkdayInventory.findOne({ medicineId: productoId });
-    if (!inventory) {
-        throw new Error('Inventario de jornada no encontrado');
-    }
-    return inventory;
+  const inventory = await WorkdayInventory.findOne({ medicineId: new mongoose.Types.ObjectId(productoId) });
+  if (!inventory) {
+    throw new Error('Inventario de jornada no encontrado');
+  }
+  return inventory;
 }
+
 
 export async function validarStockJornada(productoId, cantidad) {
     const inventory = await getWorkdayInventory(productoId);

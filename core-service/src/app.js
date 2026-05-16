@@ -4,7 +4,7 @@ import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import medicineRoutes from './medicines/medicine.routes.js';
 import movementPlugin from './movements/movement.routes.js';
-
+import inventoryRoutes from './inventory/inventroy.routes.js';
 const app = Fastify({
     logger:{
         level: 'info',
@@ -46,6 +46,10 @@ await app.register(medicineRoutes, {
 });
 
 await app.register(movementPlugin, {
+    prefix: '/api/v1'
+})
+
+await app.register(inventoryRoutes, {
     prefix: '/api/v1'
 })
 
