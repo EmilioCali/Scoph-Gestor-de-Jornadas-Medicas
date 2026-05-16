@@ -143,3 +143,27 @@ export const createRetornoJornada = async (request, reply) => {
         return handleServiceError(error, reply);
     }
 };
+
+export const getMovimientos = async (request, reply) => {
+    try {
+        const { subType, jornadaId } = request.query;
+
+        const filtros ={};
+        if(subType) filtros.subType = subType;
+        if(jornadaId) filtros["destination.id"] = jornadaId;
+
+        const movimientos = await Movement.find(filtros);
+        return reply.status(200).send({
+            sucess: true,
+            message: 'Movimientos consultados con exito',
+            data: movimientos
+        });
+
+    } catch (err) {
+        return reply.status(400).send({
+            success: false,
+            message: 'Error al consultar movimeintos',
+            error: err.message
+        });
+    }
+}

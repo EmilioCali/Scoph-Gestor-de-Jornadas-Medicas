@@ -18,6 +18,7 @@ export async function obtenerConsumoJornada(jornadaId){
         const consumo = {};
         data.data.forEach(mov =>{
             mov.detail.forEach(item =>{
+                const key = item.medicineId;
                 if(!consumo[key]){
                     consumo[key]= {
                         medicineId: item.medicineId,

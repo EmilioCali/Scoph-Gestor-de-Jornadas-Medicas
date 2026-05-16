@@ -1,5 +1,5 @@
 import { createEntrada, createSalidaReceta, createTransferencia } from './movement.controller.js'
-import { createConsumoJornada, createRetornoJornada } from './movement.controller.js'
+import { createConsumoJornada, createRetornoJornada, getMovimientos } from './movement.controller.js'
 
 const movementRoutes = async (fastify) => {
     fastify.post('/movimientos/entrada', createEntrada) //manejar mov
@@ -7,6 +7,8 @@ const movementRoutes = async (fastify) => {
     fastify.post('/movimientos/transferencia', createTransferencia)
     fastify.post('/movimientos/consumo-jornada', createConsumoJornada)
     fastify.post('/movimientos/retorno-jornada', createRetornoJornada)
+
+    fastify.get('/movimientos', getMovimientos);
 }
 
 export default movementRoutes
