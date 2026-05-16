@@ -1,4 +1,4 @@
-import { obtenerConsumoJornada, obtenerStockActual, obtenerProximosAVencer } from "./reports.service.js";
+import { obtenerConsumoJornada, obtenerStockActual, obtenerProximosAVencer, obtenerMovimientos } from "./reports.service.js";
 import { SERVICES } from '../config/services.js';
 
 export const getConsumoJornada = async (request, reply) => {
@@ -54,5 +54,24 @@ export const getProximosAVencer = async (request, reply) => {
             message: 'Error al consultar los vencimientos',
             error: err.message
         })
+    }
+}
+
+export const getMovimientos = async (request, reply) =>{
+    try {
+        const { fecha, jornadaId, tipo, usuario } = request.query;
+        const movimientos = await obtenerMovimientos({ fecha, jornadaId, tipo, usuario });
+        return reply.status(200).send({
+            success: true,
+            message: 'Movimientos de inventario: ',
+            data: movimientos
+        });
+    } catch (err) {
+        return reply.status(400).send({
+            success: false,
+            message: 'Error al consultar tods los movimientos',
+            error: err.message
+        })
+        
     }
 }

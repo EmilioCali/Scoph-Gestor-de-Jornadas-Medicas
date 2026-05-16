@@ -89,3 +89,17 @@ export async function obtenerProximosAVencer(dias = 30) {
     })
     return proximosAVencer;
 }
+
+// ver todos los movimientos del inventario central
+export async function obtenerMovimientos({ fecha, jornadaId, tipo, usuario }){
+    let url = `${SERVICES.core.baseUrl}/api/v1/movimientos?`;
+    if(fecha) url += `fecha=${fecha}&`;
+    if(jornadaId) url += `jornadaId=${jornadaId}&`;
+    if(tipo) url += `tipo=${tipo}&`;
+    if(usuario) url += `usuario=${usuario}&`;
+
+    const response = await fetch(url);
+    if(!response.ok) throw new Error('error al consultar los movimientos');
+    const data = await response.json();
+    return data.data;
+}
