@@ -59,3 +59,33 @@ export async function obtenerStockActual() {
         }))
     }));
 }
+
+//medicamentos proximos a vencer
+//medicamentos cuyos lotes vencen dentro de los próximos X días - por defecto 30
+export async function obtenerProximosAVencer(dias = 30) {
+    const response = await fetch(`${SERVICES.core.baseUrl}/api/v1/inventario-central`);
+    if (!response.ok) throw new Error('Error al consultar el inventario central');
+
+    const data = await response.json();
+    const hoy = new Date();
+    const limite = new Date();
+    limite.setDate(hoy.getDate() + dias);
+
+    const proximosAVencer = [];
+    data.data.forEach(inv => {
+        inv.lots.forEach(lote => {
+            const exp = new Date(lote.expirationDate);
+            if (exp <= limite){
+                proximosAVencer.push({
+                    medicineId: inv.medicineId._id,
+                    nombre: inv.medicineId?.name,
+                    concentracion: inv.medicineId?.concentration,
+                    batch: lote.batch,
+                    stock: lote.stock,
+                    expirationDate: lote.expirationDate
+                });
+            }
+        });
+    })
+    return proximosAVencer;
+}

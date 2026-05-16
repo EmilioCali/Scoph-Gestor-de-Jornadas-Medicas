@@ -1,4 +1,4 @@
-import { obtenerConsumoJornada, obtenerStockActual } from "./reports.service.js";
+import { obtenerConsumoJornada, obtenerStockActual, obtenerProximosAVencer } from "./reports.service.js";
 import { SERVICES } from '../config/services.js';
 
 export const getConsumoJornada = async (request, reply) => {
@@ -30,7 +30,6 @@ export const getConsumoJornada = async (request, reply) => {
 };
 
 
-
 export const getStockActual = async (request, reply) => {
     try {
         const stock = await obtenerStockActual();
@@ -39,3 +38,21 @@ export const getStockActual = async (request, reply) => {
         return reply.status(400).send({ success: false, message: "Error al consultar stock", error: err.message });
     }
 };
+
+export const getProximosAVencer = async (request, reply) => {
+    try {
+        const dias = request.query.dias ? parseInt(request.query.dias) : 30; //por defecto 30 dias
+        const proximos = await obtenerProximosAVencer(dias);
+        return reply.status(200).send({
+            success: true,
+            message: 'Estos son los medicamentos proximos a vencer',
+            data: proximos
+        });
+    } catch (err) {
+        return reply.status(400).send({
+            success: false,
+            message: 'Error al consultar los vencimientos',
+            error: err.message
+        })
+    }
+}
