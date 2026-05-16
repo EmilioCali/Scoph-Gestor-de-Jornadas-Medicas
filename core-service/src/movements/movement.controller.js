@@ -90,7 +90,7 @@ export const createConsumoJornada = async (request, reply) => {
                     concentration: medicine.concentration
                 },
                 batch: lote.batch,
-                quantity,
+                quantity: cantidad,
                 expirationDate: lote.expirationDate
             }],
             status: 'APLICADO',
